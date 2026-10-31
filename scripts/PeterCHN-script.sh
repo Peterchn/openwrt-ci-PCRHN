@@ -338,3 +338,7 @@ fi
 
 ./scripts/feeds update -i -a
 ./scripts/feeds install -a
+
+# 针对 qca-nss-ecm 的未使用函数警告，将其降级为普通警告
+sed -i '/^MAKE_FLAGS +=/a\	KCFLAGS="-Wno-error=unused-function"' feeds/nss_packages/qca-nss-ecm/Makefile
+
