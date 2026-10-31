@@ -339,6 +339,21 @@ fi
 ./scripts/feeds update -i -a
 ./scripts/feeds install -a
 
-# 针对 qca-nss-ecm 的未使用函数警告，将其降级为普通警告
+# === 1. 修复 qca-nss-ecm 在 Linux 6.12 下的 unused-function 编译错误，将其降级为普通警告 ===
 sed -i '/^MAKE_FLAGS +=/a\	KCFLAGS="-Wno-error=unused-function"' feeds/nss_packages/qca-nss-ecm/Makefile
 
+# === 2. 移除 jool 对已不存在包 kmod-nf-conntrack6 的依赖 ===
+sed -i 's/ *+kmod-nf-conntrack6//g' feeds/packages/net/jool/Makefile
+
+# === 3. 移除 openvswitch 对已不存在包 kmod-nf-conntrack6 的依赖 ===
+sed -i 's/ *+IPV6:kmod-nf-conntrack6//g' feeds/packages/net/openvswitch/Makefile
+
+# === 4. 验证修改是否生效（结果会出现在 CI 的 Load Custom Configuration 日志里） ===
+echo "=== qca-nss-ecm ==="
+grep -n "Wno-error=unused-function" feeds/nss_packages/qca-nss-ecm/Makefile || echo "qca-nss-ecm: flag not applied"
+
+echo "=== jool ==="
+grep -n "kmod-nf-conntrack6" feeds/packages/net/jool/Makefile || echo "jool: dependency removed"
+
+echo "=== openvswitch ==="
+grep -n "kmod-nf-conntrack6" feeds/packages/net/openvswitch/Makefile || echo "openvswitch: dependency removed"
